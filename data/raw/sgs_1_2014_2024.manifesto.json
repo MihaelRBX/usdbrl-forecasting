@@ -1,0 +1,17 @@
+{
+  "serie_sgs": 1,
+  "descricao": "Taxa de câmbio - Livre - Dólar americano (venda) - diário",
+  "fonte": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1/dados",
+  "periodo_solicitado": {
+    "inicio": "2014-01-01",
+    "fim": "2024-12-31"
+  },
+  "periodo_recebido": {
+    "primeira_data": "02/01/2014",
+    "ultima_data": "31/12/2024"
+  },
+  "n_registros": 2761,
+  "coletado_em": "2026-09-03T17:34:39-03:00",
+  "sha256": "2cab4b56c55fa6f3224b7007370fefd805d2790186dbfa25e55d999f94e229d8",
+  "arquivo": "sgs_1_2014_2024.json"
+}
