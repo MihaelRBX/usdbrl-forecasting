@@ -1,0 +1,40 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/*-scratch.ipynb
+
+# macOS
+.DS_Store
+
+# Configuração local do Claude Code (por máquina, não versionar)
+.claude/settings.local.json
+
+# Artigos de terceiros (PDFs recuperáveis online, fora do versionamento).
+# As entregas do MPC (docs/entregas-mpc/) continuam versionadas de propósito.
+docs/artigos/
+
+# Segredos (não há nenhum hoje — a API do SGS é pública — mas fica a rede de proteção)
+.env
+*.key
+
+# Artefatos pesados de treinamento (pesos, checkpoints, logs)
+models/
+runs/
+*.pt
+*.pth
+*.ckpt
+
+# ATENÇÃO: data/ NÃO é ignorado, de propósito.
+# A série tem ~100 KB e a reprodutibilidade é requisito metodológico do TCC:
+# `git clone` tem que ser suficiente para reproduzir o experimento.
+# Ver base-conhecimento/04-metodologia.md.
