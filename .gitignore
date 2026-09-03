@@ -19,10 +19,6 @@ notebooks/*-scratch.ipynb
 # Configuração local do Claude Code (por máquina, não versionar)
 .claude/settings.local.json
 
-# Artigos de terceiros (PDFs recuperáveis online, fora do versionamento).
-# As entregas do MPC (docs/entregas-mpc/) continuam versionadas de propósito.
-docs/artigos/
-
 # Segredos (não há nenhum hoje — a API do SGS é pública — mas fica a rede de proteção)
 .env
 *.key

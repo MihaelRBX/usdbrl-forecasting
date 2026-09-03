@@ -27,15 +27,16 @@ data/
   raw/                 Artefatos imutáveis da coleta (JSON + manifesto)
   processed/           Série canônica (usdbrl_diario.csv)
 reports/figuras/       Figuras geradas pela análise
-docs/
-  base-conhecimento/   Notas do TCC (tema, metodologia, modelos, referências…)
-  entregas-mpc/        Entregas da disciplina de Método de Pesquisa
 notebooks/  tests/      (reservados)
 ```
 
+A documentação do TCC (base de conhecimento, metodologia, referências e entregas
+da disciplina) vive em um repositório separado: **`tcc-cambio-docs`**. Este repo
+guarda apenas o projeto reproduzível — código, dados e saídas.
+
 > `data/` é versionado **de propósito**: a série tem ~100 KB e a reprodutibilidade
 > é requisito metodológico do TCC — `git clone` deve bastar para reproduzir o
-> experimento. Ver `docs/base-conhecimento/04-metodologia.md`.
+> experimento. Ver a metodologia no repositório `tcc-cambio-docs`.
 
 ## Instalação
 
