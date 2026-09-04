@@ -21,11 +21,12 @@ src/tcc_cambio/        Pacote Python instalável
   dados/
     coleta_sgs.py      Coleta da série USD/BRL do SGS/BCB (bruta + manifesto)
     tratamento.py      Limpeza e validação: JSON cru -> série canônica
+    split.py           Divisão cronológica em treino/validação/teste
   analise/
     histogramas.py     Análise exploratória (cotação e log-retorno)
 data/
   raw/                 Artefatos imutáveis da coleta (JSON + manifesto)
-  processed/           Série canônica (usdbrl_diario.csv)
+  processed/           Série canônica (usdbrl_diario.csv) e divisão (usdbrl_split.csv)
 reports/figuras/       Figuras geradas pela análise
 notebooks/  tests/      (reservados)
 ```
@@ -56,11 +57,12 @@ matplotlib).
 ```bash
 python -m tcc_cambio.dados.coleta_sgs      # baixa a série bruta do SGS -> data/raw/
 python -m tcc_cambio.dados.tratamento      # trata e valida        -> data/processed/
+python -m tcc_cambio.dados.split           # divide treino/val/teste -> data/processed/
 python -m tcc_cambio.analise.histogramas   # gera figuras          -> reports/figuras/
 ```
 
 ## Dados
 
 Série 1 do SGS/BCB — *Taxa de câmbio — Livre — Dólar americano (venda) — diário*,
-recorte **2010–2024**, escolhido para cobrir regimes macroeconômicos distintos
+recorte **2010–2026**, escolhido para cobrir regimes macroeconômicos distintos
 (pós-crise de 2008, recessão de 2015–2016, pandemia e pós-pandemia).
