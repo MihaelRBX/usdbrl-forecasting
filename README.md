@@ -6,7 +6,7 @@ Mackenzie). Estudo comparativo entre um modelo econométrico clássico
 Neural Networks**) na previsão da taxa de câmbio **USD/BRL**, a partir de dados
 históricos do Banco Central do Brasil.
 
-- **Autores:** Mihael Rommel Barbosa Xavier · Edson Fu
+- **Autores:** Mihael Rommel Barbosa Xavier · Edson Fu · Rafael Moutinho
 - **Orientador pretendido:** Prof. Anderson Adaime de Borba
 - **Execução prevista:** Ago/2026 – Jul/2027
 
