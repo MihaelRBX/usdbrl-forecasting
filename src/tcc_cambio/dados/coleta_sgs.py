@@ -20,6 +20,7 @@ from tcc_cambio.config import (
     ANO_FIM,
     ANO_INICIO,
     ANOS_POR_BLOCO,
+    DATA_CORTE,
     DIR_RAW,
     SERIE_DESCRICAO,
     SERIE_PADRAO,
@@ -98,7 +99,7 @@ def buscar_bloco(serie: int, inicio: date, fim: date) -> list[dict]:
     ) from ultimo_erro
 
 
-def coletar(serie: int, ano_inicio: int, ano_fim: int) -> list[dict]:
+def coletar(serie, ano_inicio, ano_fim, corte: date | None = None) -> list[dict]:
     """Baixa a série inteira: itera blocos, concatena, deduplica e ordena."""
     blocos = montar_blocos(ano_inicio, ano_fim, ANOS_POR_BLOCO)
 
@@ -116,11 +117,14 @@ def coletar(serie: int, ano_inicio: int, ano_fim: int) -> list[dict]:
 
     registros.sort(key=lambda r: datetime.strptime(r["data"], "%d/%m/%Y"))
 
+    if corte is not None:
+        antes = len(registros)
+        registros = [r for r in registros
+                     if datetime.strptime(r["data"], "%d/%m/%Y").date() <= corte]
+        if len(registros) < antes:
+            log.info("truncado em %s: %d -> %d registros", corte, antes, len(registros))
+
     return registros
-
-
-
-
 
 def salvar(registros: list[dict], serie: int, ano_inicio: int, ano_fim: int,
            dir_saida: Path) -> Path:
@@ -183,6 +187,8 @@ def main() -> None:
                         help=f"ano inicial, inclusivo (padrão: {ANO_INICIO})")
     parser.add_argument("--fim", type=int, default=ANO_FIM,
                         help=f"ano final, inclusivo (padrão: {ANO_FIM})")
+    parser.add_argument("--corte", type=date.fromisoformat, default=DATA_CORTE,
+                        help=f"data de corte da amostra, ISO-8601 (padrão: {DATA_CORTE})")
     parser.add_argument("--saida", type=Path, default=DIR_RAW,
                         help="diretório de destino (padrão: data/raw)")
     args = parser.parse_args()
@@ -193,7 +199,7 @@ def main() -> None:
     # Configuração de logging pertence à aplicação, nunca ao módulo importável.
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
-    registros = coletar(args.serie, args.inicio, args.fim)
+    registros = coletar(args.serie, args.inicio, args.fim, args.corte)
     caminho = salvar(registros, args.serie, args.inicio, args.fim, args.saida)
 
     # Resultado vai para stdout; progresso e avisos ficam no stderr (logging).

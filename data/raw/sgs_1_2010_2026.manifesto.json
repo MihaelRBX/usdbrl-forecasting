@@ -4,14 +4,14 @@
   "fonte": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1/dados",
   "periodo_solicitado": {
     "inicio": "2010-01-01",
-    "fim": "2024-12-31"
+    "fim": "2026-12-31"
   },
   "periodo_recebido": {
     "primeira_data": "04/01/2010",
-    "ultima_data": "31/12/2024"
+    "ultima_data": "03/09/2026"
   },
-  "n_registros": 3767,
-  "coletado_em": "2026-09-03T17:18:06-03:00",
-  "sha256": "a73b7bd39be6e6c8939898c9f6c551d6e50495a64693e433af588efb96db47f5",
-  "arquivo": "sgs_1_2010_2024.json"
+  "n_registros": 4188,
+  "coletado_em": "2026-09-03T21:44:31-03:00",
+  "sha256": "89b2f189ebd2406ac1de4efa4f06261869b7a6f2b05a84a9ed3f4cf5d23a15fa",
+  "arquivo": "sgs_1_2010_2026.json"
 }

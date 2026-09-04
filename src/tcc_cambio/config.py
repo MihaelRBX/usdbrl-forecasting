@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Final
 
@@ -22,9 +23,11 @@ DIR_DADOS: Final[Path] = RAIZ / "data"
 DIR_RAW: Final[Path] = DIR_DADOS / "raw"
 DIR_PROCESSED: Final[Path] = DIR_DADOS / "processed"
 
-# Saída das figuras da análise exploratória (histogramas, séries, etc.).
-# Fora de data/ de propósito: são artefatos de relatório, não dados.
-DIR_FIGURAS: Final[Path] = RAIZ / "reports" / "figuras"
+# Artefatos de relatório: figuras da análise exploratória e tabelas destinadas
+# ao texto do TCC. Fora de data/ de propósito — são caracterização derivada,
+# não insumo de modelo. Tudo aqui é regenerável a partir de data/.
+DIR_REPORTS: Final[Path] = RAIZ / "reports"
+DIR_FIGURAS: Final[Path] = DIR_REPORTS / "figuras"
 
 # --------------------------------------------------------------------------
 # Série do SGS / Banco Central do Brasil
@@ -47,7 +50,8 @@ SGS_API: Final[str] = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{serie}/dad
 # 15 anos, escolhidos para cobrir regimes macroeconômicos distintos
 # (pós-crise de 2008, recessão 2015-2016, pandemia, pós-pandemia).
 ANO_INICIO: Final[int] = 2010
-ANO_FIM: Final[int] = 2024
+ANO_FIM: Final[int] = 2026   
+DATA_CORTE: Final[date] = date(2026, 9, 3)
 
 # A API do SGS recusa (HTTP 406) janelas maiores que 10 anos em séries de
 # periodicidade diária, então a coleta precisa ser fatiada. 5 anos dá folga.
