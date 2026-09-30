@@ -7,7 +7,7 @@ Neural Networks**) na previsão da taxa de câmbio **USD/BRL**, a partir de dado
 históricos do Banco Central do Brasil.
 
 - **Autores:** Mihael Rommel Barbosa Xavier · Edson Fu · Rafael Moutinho
-- **Orientador pretendido:** Prof. Anderson Adaime de Borba
+- **Orientador:** Prof. Anderson Adaime de Borba
 - **Execução prevista:** Ago/2026 – Jul/2027
 
 O eixo do trabalho é *como cada modelo representa o tempo*: da estrutura
