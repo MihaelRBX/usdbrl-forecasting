@@ -37,6 +37,8 @@ import argparse
 import logging
 from pathlib import Path
 
+from statsmodels.tsa.stattools import adfuller
+
 import matplotlib
 
 matplotlib.use("Agg")  # backend sem display: roda em terminal e em CI.
@@ -121,7 +123,18 @@ def teste_adf(serie: pd.Series) -> dict:
     `estacionaria` (bool = p_valor < ALFA). Esse dict alimenta a tabela de
     `resumir`.
     """
-    ...
+    serie = serie.dropna()
+
+    estatistica, p_valor, defasagens, n_obs, valores_criticos, _ = adfuller(serie)
+
+    return {
+        "estatistica": estatistica,
+        "p_valor": p_valor,
+        "defasagens": defasagens,
+        "n_obs": n_obs,
+        "valores_criticos": valores_criticos,
+        "estacionaria": p_valor < ALFA,
+    }
 
 
 def teste_kpss(serie: pd.Series) -> dict:
