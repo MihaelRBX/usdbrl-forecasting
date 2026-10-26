@@ -1,0 +1,7 @@
+conjunto,h,modelo,sementes,n,rmse,rmse_dp,mape,mape_dp,acuracia_direcional
+teste,1,passeio_aleatorio,1,628,0.03725870863874311,,0.5037918268854308,,
+teste,5,passeio_aleatorio,1,624,0.08367735559721988,,1.174513575353312,,
+teste,10,passeio_aleatorio,1,619,0.11499349507485848,,1.681579805706725,,
+validacao,1,passeio_aleatorio,1,627,0.043449874142492156,,0.6374156313578558,,
+validacao,5,passeio_aleatorio,1,623,0.10138407180643005,,1.538735468015276,,
+validacao,10,passeio_aleatorio,1,618,0.1372583231187536,,2.073487384751268,,
