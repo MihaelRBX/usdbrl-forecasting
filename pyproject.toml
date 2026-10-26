@@ -13,6 +13,7 @@ dependencies = [
     "pandas>=3.0",
     "requests>=2.32",
     "pyarrow>=17.0",
+    "scipy>=1.13",       # avaliacao: distribuição t do Diebold-Mariano
 ]
 
 [project.optional-dependencies]

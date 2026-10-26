@@ -28,6 +28,12 @@ DIR_PROCESSED: Final[Path] = DIR_DADOS / "processed"
 # não insumo de modelo. Tudo aqui é regenerável a partir de data/.
 DIR_REPORTS: Final[Path] = RAIZ / "reports"
 DIR_FIGURAS: Final[Path] = DIR_REPORTS / "figuras"
+DIR_TABELAS: Final[Path] = DIR_REPORTS / "tabelas"
+
+# Previsões de cada modelo, no formato comum de avaliacao.protocolo. Ficam em
+# data/ (e não em reports/) porque são insumo da avaliação: métricas e
+# Diebold-Mariano são recalculáveis a partir daqui sem retreinar nada.
+DIR_RESULTADOS: Final[Path] = DIR_DADOS / "resultados"
 
 # --------------------------------------------------------------------------
 # Série do SGS / Banco Central do Brasil
