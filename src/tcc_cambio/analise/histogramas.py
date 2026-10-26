@@ -4,7 +4,7 @@ Primeira peça da análise exploratória (metodologia, §3.2). Duas distribuiç�
 interessam ao TCC, por motivos diferentes:
 
 1. **Cotação (nível de preço).** Série não-estacionária, com tendência e
-   multimodalidade que refletem os regimes cambiais do período (2010–2024).
+   multimodalidade que refletem os regimes cambiais do período (2010–2026).
    O histograma serve para *mostrar* o problema — não é o que se modela.
 
 2. **Log-retorno diário.** É o alvo estacionário do estudo: o que o ARMA-GARCH
@@ -38,7 +38,7 @@ from tcc_cambio.config import DIR_FIGURAS, DIR_PROCESSED
 
 log = logging.getLogger(__name__)
 
-# Número de classes padrão. 50 dá resolução suficiente em ~3.767 observações
+# Número de classes padrão. 50 dá resolução suficiente em ~4.188 observações
 # sem picotar a distribuição em ruído.
 BINS_PADRAO = 50
 
@@ -55,6 +55,11 @@ def carregar_serie(caminho: Path) -> pd.DataFrame:
     log.info("carregada série tratada: %d observações de %s a %s",
              len(df), df["data"].iloc[0].date(), df["data"].iloc[-1].date())
     return df
+
+
+def _periodo(df: pd.DataFrame) -> str:
+    """Rótulo "AAAA–AAAA" do recorte, derivado dos dados (não fixo no código)."""
+    return f"{df['data'].iloc[0].year}–{df['data'].iloc[-1].year}"
 
 
 def _densidade_normal(x: np.ndarray, media: float, desvio: float) -> np.ndarray:
@@ -75,7 +80,7 @@ def histograma_cotacao(df: pd.DataFrame, bins: int, caminho: Path) -> Path:
     ax.axvline(np.median(cot), color="#27ae60", linestyle=":", linewidth=1.2,
                label=f"mediana = R$ {np.median(cot):.2f}")
 
-    ax.set_title("Distribuição da cotação diária USD/BRL (2010–2024)")
+    ax.set_title(f"Distribuição da cotação diária USD/BRL ({_periodo(df)})")
     ax.set_xlabel("Cotação (BRL por USD)")
     ax.set_ylabel("Frequência (dias úteis)")
     ax.legend(frameon=False)
@@ -122,7 +127,7 @@ def histograma_log_retorno(df: pd.DataFrame, bins: int, caminho: Path) -> Path:
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.8,
                       edgecolor="0.7"))
 
-    ax.set_title("Distribuição do log-retorno diário USD/BRL (2010–2024)")
+    ax.set_title(f"Distribuição do log-retorno diário USD/BRL ({_periodo(df)})")
     ax.set_xlabel("Log-retorno diário  log(P_t) − log(P_{t−1})")
     ax.set_ylabel("Densidade")
     ax.legend(frameon=False, loc="upper right")
