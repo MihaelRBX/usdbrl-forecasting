@@ -37,16 +37,22 @@ import argparse
 import logging
 from pathlib import Path
 
-from statsmodels.tsa.stattools import adfuller
+import warnings
 
 import matplotlib
 
 matplotlib.use("Agg")  # backend sem display: roda em terminal e em CI.
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import pandas as pd
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch
+from statsmodels.stats.stattools import jarque_bera
+from statsmodels.tools.sm_exceptions import InterpolationWarning
+from statsmodels.tsa.stattools import adfuller, kpss
 
-from tcc_cambio.config import DIR_FIGURAS, DIR_PROCESSED
+from tcc_cambio.config import DIR_FIGURAS, DIR_PROCESSED, DIR_TABELAS
 
 log = logging.getLogger(__name__)
 
@@ -125,7 +131,9 @@ def teste_adf(serie: pd.Series) -> dict:
     """
     serie = serie.dropna()
 
-    estatistica, p_valor, defasagens, n_obs, valores_criticos, _ = adfuller(serie)
+    estatistica, p_valor, defasagens, n_obs, valores_criticos, _ = adfuller(
+        serie, result_object=False
+    )
 
     return {
         "estatistica": estatistica,
@@ -153,7 +161,26 @@ def teste_kpss(serie: pd.Series) -> dict:
     (cuidado: a lógica é invertida em relação ao ADF). ADF e KPSS concordando é
     o que dá segurança para a afirmação de estacionariedade no texto.
     """
-    ...
+    serie = serie.dropna()
+
+    # O p-valor do KPSS vem de interpolação numa tabela que só vai de 0,01 a
+    # 0,10. Fora dela o statsmodels devolve o próprio limite e avisa; o aviso
+    # vira a chave `p_no_limite`, que `resumir` traduz em "< 0,01" / "> 0,10".
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", InterpolationWarning)
+        estatistica, p_valor, defasagens, valores_criticos = kpss(
+            serie, regression="c", nlags="auto", result_object=False
+        )
+
+    return {
+        "estatistica": estatistica,
+        "p_valor": p_valor,
+        "defasagens": defasagens,
+        "n_obs": len(serie),
+        "valores_criticos": valores_criticos,
+        "p_no_limite": p_valor in (0.01, 0.10),
+        "estacionaria": p_valor > ALFA,
+    }
 
 
 def teste_ljung_box(serie: pd.Series, defasagens: int = DEFASAGENS_PADRAO) -> pd.DataFrame:
@@ -171,7 +198,7 @@ def teste_ljung_box(serie: pd.Series, defasagens: int = DEFASAGENS_PADRAO) -> pd
     lags=defasagens, return_df=True)`. Devolver o DataFrame resultante (uma
     linha por defasagem, colunas de estatística e p-valor).
     """
-    ...
+    return acorr_ljungbox(serie.dropna(), lags=defasagens, return_df=True)
 
 
 def teste_arch_lm(serie: pd.Series, defasagens: int = DEFASAGENS_PADRAO) -> dict:
@@ -188,7 +215,20 @@ def teste_arch_lm(serie: pd.Series, defasagens: int = DEFASAGENS_PADRAO) -> dict
     Devolver dict com `estatistica_lm`, `p_valor_lm`, `estatistica_f`,
     `p_valor_f` e `tem_efeito_arch` (bool = p_valor_lm < ALFA).
     """
-    ...
+    serie = serie.dropna()
+
+    estatistica_lm, p_valor_lm, estatistica_f, p_valor_f = het_arch(
+        serie - serie.mean(), nlags=defasagens, result_object=False
+    )
+
+    return {
+        "estatistica_lm": estatistica_lm,
+        "p_valor_lm": p_valor_lm,
+        "estatistica_f": estatistica_f,
+        "p_valor_f": p_valor_f,
+        "defasagens": defasagens,
+        "tem_efeito_arch": p_valor_lm < ALFA,
+    }
 
 
 def teste_jarque_bera(serie: pd.Series) -> dict:
@@ -203,7 +243,20 @@ def teste_jarque_bera(serie: pd.Series) -> dict:
     (JB, p, assimetria, curtose). Devolver dict com esses campos e `normal`
     (bool = p_valor > ALFA).
     """
-    ...
+    serie = serie.dropna()
+
+    # `curtose` aqui é a curtose comum (normal = 3), não a "em excesso" do
+    # histograma; as duas ficam no dict para não haver confusão no texto.
+    estatistica, p_valor, assimetria, curtose = jarque_bera(serie)
+
+    return {
+        "estatistica": float(estatistica),
+        "p_valor": float(p_valor),
+        "assimetria": float(assimetria),
+        "curtose": float(curtose),
+        "curtose_excesso": float(curtose) - 3.0,
+        "normal": p_valor > ALFA,
+    }
 
 
 def plot_acf_pacf(serie: pd.Series, max_lag: int, caminho: Path) -> Path:
@@ -223,7 +276,63 @@ def plot_acf_pacf(serie: pd.Series, max_lag: int, caminho: Path) -> Path:
 
     Devolver o `caminho` gravado (padrão do módulo `analise`).
     """
-    ...
+    serie = serie.dropna()
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    # zero=False: a defasagem 0 (correlação 1 por definição) só achataria o
+    # gráfico; auto_ylims ajusta o eixo às correlações reais, que são pequenas.
+    plot_acf(serie, lags=max_lag, ax=ax1, zero=False, auto_ylims=True)
+    plot_pacf(serie, lags=max_lag, ax=ax2, method="ywm", zero=False, auto_ylims=True)
+
+    ax1.set_title("ACF — autocorrelação")
+    ax2.set_title("PACF — autocorrelação parcial")
+    for ax in (ax1, ax2):
+        ax.set_xlabel("Defasagem (dias úteis)")
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax1.set_ylabel("Correlação")
+    fig.suptitle(f"Correlogramas do {serie.name or 'log-retorno'} diário USD/BRL "
+                 f"(n = {serie.size})")
+    fig.tight_layout()
+
+    caminho.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(caminho, dpi=150)
+    plt.close(fig)
+    log.info("gravado %s", caminho.name)
+    return caminho
+
+
+# Por teste: hipótese nula e a leitura de "rejeita" / "não rejeita" H0.
+_LEITURAS = {
+    "ADF": ("raiz unitária", "estacionária", "não estacionária"),
+    "KPSS": ("estacionária", "não estacionária", "estacionária"),
+    "Ljung-Box": ("sem autocorrelação até a defasagem k",
+                  "há dependência serial", "sem dependência serial"),
+    "ARCH-LM": ("sem efeito ARCH", "há efeito ARCH", "sem efeito ARCH"),
+    "Jarque-Bera": ("normalidade", "não normal", "normal"),
+}
+
+
+def _extrair(teste: str, resultado: dict | pd.DataFrame) -> tuple:
+    """(estatística, p-valor, H0, leitura se rejeita, leitura se não rejeita)."""
+    if teste.startswith("Ljung-Box"):
+        # Uma linha por defasagem; a tabela usa a última (teste conjunto até k).
+        ultima = resultado.iloc[-1]
+        estatistica, p_valor = ultima["lb_stat"], ultima["lb_pvalue"]
+    elif teste == "ARCH-LM":
+        estatistica, p_valor = resultado["estatistica_lm"], resultado["p_valor_lm"]
+    else:
+        estatistica, p_valor = resultado["estatistica"], resultado["p_valor"]
+    h0, sim, nao = _LEITURAS[teste.split(" ")[0]]
+    return float(estatistica), float(p_valor), h0, sim, nao
+
+
+def _formatar_p(p_valor: float, resultado) -> str:
+    """p-valor para o texto: respeita os limites da tabela do KPSS e p ~ 0."""
+    if isinstance(resultado, dict) and resultado.get("p_no_limite"):
+        return "< 0,01" if p_valor <= 0.01 else "> 0,10"
+    if p_valor < 1e-4:
+        return "< 0,0001"
+    return f"{p_valor:.4f}".replace(".", ",")
 
 
 def resumir(
@@ -240,7 +349,35 @@ def resumir(
     Se `caminho` for dado, gravar em CSV (padrão do projeto: datas ISO, sem
     índice). Logar a tabela com `to_string(index=False)`. Devolver o DataFrame.
     """
-    ...
+    linhas = []
+    for (teste, serie), resultado in diagnosticos.items():
+        estatistica, p_valor, h0, rejeita_sim, rejeita_nao = _extrair(teste, resultado)
+        if teste.startswith("Ljung-Box") and serie.endswith("²"):
+            # No quadrado do retorno, dependência serial = volatilidade em blocos.
+            rejeita_sim, rejeita_nao = "agrupamento de volatilidade", "sem agrupamento"
+        rejeita = p_valor < ALFA
+        linhas.append({
+            "teste": teste,
+            "serie": serie,
+            "h0": h0,
+            "estatistica": estatistica,
+            "p_valor": p_valor,
+            "p_texto": _formatar_p(p_valor, resultado),
+            "decisao": "rejeita H0" if rejeita else "não rejeita H0",
+            "conclusao": rejeita_sim if rejeita else rejeita_nao,
+        })
+
+    tabela = pd.DataFrame(linhas)
+    log.info("diagnósticos (α = %.2f):\n%s\n", ALFA,
+             tabela.drop(columns="p_valor").to_string(
+                 index=False, float_format=lambda x: f"{x:.3f}"))
+
+    if caminho is not None:
+        caminho.parent.mkdir(parents=True, exist_ok=True)
+        tabela.to_csv(caminho, index=False)
+        log.info("gravado %s", caminho.name)
+
+    return tabela
 
 
 def main() -> None:
@@ -255,6 +392,8 @@ def main() -> None:
                         help="conjunto a diagnosticar; 'todos' usa a série inteira")
     parser.add_argument("--saida", type=Path, default=DIR_FIGURAS,
                         help="diretório para a figura ACF/PACF")
+    parser.add_argument("--tabelas", type=Path, default=DIR_TABELAS,
+                        help="diretório para a tabela de diagnósticos")
     parser.add_argument("--defasagens", type=int, default=DEFASAGENS_PADRAO,
                         help="defasagens de Ljung-Box e ARCH-LM")
     args = parser.parse_args()
@@ -265,15 +404,30 @@ def main() -> None:
         parser.error(f"arquivo não encontrado: {args.entrada}\n"
                      "Rode antes: python -m tcc_cambio.dados.split")
 
-    # Orquestração a implementar:
-    #   1. df = carregar_serie(args.entrada, conjunto=None se 'todos' senão args.conjunto)
-    #   2. cotacao = df["cotacao"];  retorno = df["log_retorno"].dropna()
-    #   3. Estacionariedade: ADF+KPSS na cotação (esperado: não-estacionária)
-    #      e no retorno (esperado: estacionária).
-    #   4. Estrutura serial: plot_acf_pacf(retorno, ...) + Ljung-Box no retorno.
-    #   5. Efeito ARCH: Ljung-Box no retorno² + ARCH-LM + Jarque-Bera no retorno.
-    #   6. resumir(...) agrega tudo numa tabela e imprime o caminho da figura.
-    ...
+    conjunto = None if args.conjunto == "todos" else args.conjunto
+    df = carregar_serie(args.entrada, conjunto=conjunto)
+    cotacao = df["cotacao"]
+    retorno = df["log_retorno"].dropna().rename("log-retorno")
+    k = args.defasagens
+
+    diagnosticos = {
+        ("ADF", "cotação"): teste_adf(cotacao),
+        ("ADF", "log-retorno"): teste_adf(retorno),
+        ("KPSS", "cotação"): teste_kpss(cotacao),
+        ("KPSS", "log-retorno"): teste_kpss(retorno),
+        (f"Ljung-Box ({k})", "log-retorno"): teste_ljung_box(retorno, k),
+        (f"Ljung-Box ({k})", "log-retorno²"): teste_ljung_box(retorno**2, k),
+        ("ARCH-LM", "log-retorno"): teste_arch_lm(retorno, k),
+        ("Jarque-Bera", "log-retorno"): teste_jarque_bera(retorno),
+    }
+
+    sufixo = "" if args.conjunto == "treino" else f"_{args.conjunto}"
+    figura = plot_acf_pacf(retorno, MAX_LAG_CORRELOGRAMA,
+                           args.saida / f"acf_pacf_log_retorno{sufixo}.png")
+    tabela = args.tabelas / f"diagnosticos{sufixo}.csv"
+    resumir(diagnosticos, tabela)
+
+    print(f"\n-> {figura}\n-> {tabela}")
 
 
 if __name__ == "__main__":

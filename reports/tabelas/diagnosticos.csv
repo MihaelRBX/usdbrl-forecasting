@@ -1,0 +1,9 @@
+teste,serie,h0,estatistica,p_valor,p_texto,decisao,conclusao
+ADF,cotação,raiz unitária,-0.214000794692731,0.9368320529496724,"0,9368",não rejeita H0,não estacionária
+ADF,log-retorno,raiz unitária,-28.20901679070312,0.0,"< 0,0001",rejeita H0,estacionária
+KPSS,cotação,estacionária,8.196527543390062,0.01,"< 0,01",rejeita H0,não estacionária
+KPSS,log-retorno,estacionária,0.05695522238957249,0.1,"> 0,10",não rejeita H0,estacionária
+Ljung-Box (10),log-retorno,sem autocorrelação até a defasagem k,24.927924612003,0.005483809427070665,"0,0055",rejeita H0,há dependência serial
+Ljung-Box (10),log-retorno²,sem autocorrelação até a defasagem k,251.9068407098792,2.1560275412651196e-48,"< 0,0001",rejeita H0,agrupamento de volatilidade
+ARCH-LM,log-retorno,sem efeito ARCH,147.7144408259494,1.1000525638059625e-26,"< 0,0001",rejeita H0,há efeito ARCH
+Jarque-Bera,log-retorno,normalidade,3396.2737132482134,0.0,"< 0,0001",rejeita H0,não normal
