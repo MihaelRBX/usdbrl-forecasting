@@ -34,6 +34,13 @@ from scipy import stats
 
 ALFA = 0.05
 
+# Colunas da tabela de `comparar_todos`. Fixas para que o CSV tenha cabeçalho
+# mesmo quando ainda não há pares a comparar (um modelo só).
+COLUNAS = (
+    "conjunto", "h", "modelo_1", "modelo_2", "estatistica", "p_valor", "t",
+    "p_holm", "significativo", "melhor",
+)
+
 
 def _autocovariancia(d: np.ndarray, k: int) -> float:
     """Autocovariância amostral de defasagem k (divisor T, como em DM 1995)."""
@@ -108,13 +115,14 @@ def comparar_todos(df: pd.DataFrame) -> pd.DataFrame:
             res = teste_dm(par[m1].to_numpy(), par[m2].to_numpy(), int(h))
             linhas.append({"conjunto": conjunto, "h": h, "modelo_1": m1, "modelo_2": m2, **res})
 
-    tabela = pd.DataFrame(linhas)
+    tabela = pd.DataFrame(linhas, columns=list(COLUNAS[:7]))
     if tabela.empty:
-        return tabela
+        return pd.DataFrame(columns=list(COLUNAS))
     tabela["p_holm"] = tabela.groupby(["conjunto", "h"])["p_valor"].transform(holm)
     tabela["significativo"] = tabela["p_holm"] < ALFA
     tabela["melhor"] = np.where(
         tabela["estatistica"] < 0, tabela["modelo_1"], tabela["modelo_2"]
     )
     tabela.loc[~tabela["significativo"], "melhor"] = "—"
-    return tabela.sort_values(["conjunto", "h", "p_valor"]).reset_index(drop=True)
+    tabela = tabela.sort_values(["conjunto", "h", "p_valor"]).reset_index(drop=True)
+    return tabela[list(COLUNAS)]
